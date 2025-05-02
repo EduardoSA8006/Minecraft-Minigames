@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "825720519411",
+    "project_id": "minecraft-minigames",
+    "storage_bucket": "minecraft-minigames.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:825720519411:android:0ab9aea897c5e301ef1586",
+        "android_client_info": {
+          "package_name": "com.ed.minigames_minecraft"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEsp8zwjgb3Txem90_R5qLwYyqLmsA20k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
