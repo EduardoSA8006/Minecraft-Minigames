@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:minigames_minecraft/data/models/item_model.dart';
-import 'package:minigames_minecraft/data/repositories/item_repository.dart';
+import 'package:minigames_minecraft/features/items/models/item_model.dart';
+import 'package:minigames_minecraft/features/items/repositories/item_repository.dart';
 
 abstract class ItemState {}
 
@@ -9,8 +9,13 @@ class ItemInitial extends ItemState {}
 class ItemLoading extends ItemState {}
 
 class ItemSuccess extends ItemState {
-  final Item? item; // Adicionado para edição
+  final Item? item;
   ItemSuccess([this.item]);
+}
+
+class ItemListSuccess extends ItemState {
+  final List<Item> items;
+  ItemListSuccess(this.items);
 }
 
 class ItemError extends ItemState {
@@ -23,41 +28,78 @@ class ItemCubit extends Cubit<ItemState> {
 
   ItemCubit(this._repository) : super(ItemInitial());
 
-  // Método para adicionar OU editar item
-  Future<void> saveItem(Item item, {bool isEditing = false}) async {
-    // Validações
-    if (item.id.isEmpty || !item.id.startsWith('minecraft:')) {
-      emit(ItemError('ID inválido. Deve começar com "minecraft:"'));
-      return;
-    }
-
-    if (item.nome['pt']?.isEmpty ?? true) {
-      emit(ItemError('Nome em português é obrigatório'));
-      return;
-    }
-
+  Future<void> addItem(Item item) async {
     emit(ItemLoading());
+    if (item.id.isEmpty || !item.id.startsWith('minecraft:')) {
+      emit(ItemError('ID inválido'));
+      return;
+    }
     try {
-      if (isEditing) {
-        await _repository.updateItem(item);
-      } else {
-        await _repository.addItem(item);
-      }
-      emit(ItemSuccess(isEditing ? item : null));
+      await _repository.addItem(item);
+      emit(ItemSuccess(item));
     } catch (e) {
-      emit(ItemError('Erro ao ${isEditing ? 'editar' : 'salvar'}: $e'));
+      emit(ItemError('Erro ao adicionar item: $e'));
     }
   }
 
-  // Método para carregar item para edição
-  Future<void> loadItemForEditing(String itemId) async {
+  Future<void> updateItem(Item item) async {
     emit(ItemLoading());
+    if (item.id.isEmpty || !item.id.startsWith('minecraft:')) {
+      emit(ItemError('ID inválido'));
+      return;
+    }
     try {
-      final items = await _repository.getItems();
-      final item = items.firstWhere((i) => i.id == itemId);
+      await _repository.updateItem(item);
       emit(ItemSuccess(item));
     } catch (e) {
-      emit(ItemError('Item não encontrado'));
+      emit(ItemError('Erro ao editar item: $e'));
+    }
+  }
+
+  Future<void> deleteItem(Item item) async {
+    final itemId = item.id;
+    if (itemId.isEmpty || !itemId.startsWith('minecraft:')) {
+      emit(ItemError('ID inválido'));
+      return;
+    }
+    emit(ItemLoading());
+    try {
+      await _repository.deleteItem(item);
+      emit(ItemSuccess(null));
+    } catch (e) {
+      emit(ItemError('Erro ao deletar item: $e'));
+    }
+  }
+
+  Future<void> getItem(Item item) async {
+    if (item.id.isEmpty || !item.id.startsWith('minecraft:')) {
+      emit(ItemError('ID inválido'));
+      return;
+    }
+    emit(ItemLoading());
+    if (item.id.isEmpty || !item.id.startsWith('minecraft:')) {
+      emit(ItemError('ID inválido'));
+      return;
+    }
+    try {
+      final itemResult = await _repository.getItem(item);
+      emit(ItemSuccess(itemResult));
+    } catch (e) {
+      emit(ItemError('Erro ao carregar iten: $e'));
+    }
+  }
+
+  Future<void> getAllItems() async {
+    emit(ItemLoading());
+    try {
+      final items = await _repository.getAllItems();
+      if (items == null || items.isEmpty) {
+        emit(ItemError('Nenhum item encontrado'));
+        return;
+      }
+      emit(ItemListSuccess(items));
+    } catch (e) {
+      emit(ItemError('Erro ao carregar itens: $e'));
     }
   }
 }

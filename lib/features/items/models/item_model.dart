@@ -27,7 +27,7 @@ class Item {
     this.crafting,
   });
 
-  factory Item.fromJson(Map<String, dynamic> json) {
+  factory Item.fromJson({required Map<String, dynamic> json}) {
     return Item(
       nome: Map<String, String>.from(json['nome'] ?? {}),
       id: json['id'] ?? '',
@@ -64,18 +64,18 @@ class Item {
   }
 
   Item copyWith({
-    Map<String, String>? nome,
-    String? id,
-    int? stackSize,
-    String? categoria,
-    String? versaoAdicao,
-    List<String>? ondeEncontrado,
-    String? imagem,
-    String? descricao,
-    String? raridade,
-    int? durabilidade,
-    bool? renovavel,
-    Map<String, String>? crafting,
+    required Map<String, String>? nome,
+    required String? id,
+    required int? stackSize,
+    required String? categoria,
+    required String? versaoAdicao,
+    required List<String> ondeEncontrado,
+    required String? imagem,
+    required String? descricao,
+    required String? raridade,
+    required int? durabilidade,
+    required bool? renovavel,
+    required Map<String, String>? crafting,
   }) {
     return Item(
       nome: nome ?? this.nome,
@@ -83,7 +83,7 @@ class Item {
       stackSize: stackSize ?? this.stackSize,
       categoria: categoria ?? this.categoria,
       versaoAdicao: versaoAdicao ?? this.versaoAdicao,
-      ondeEncontrado: ondeEncontrado ?? this.ondeEncontrado,
+      ondeEncontrado: ondeEncontrado,
       imagem: imagem ?? this.imagem,
       descricao: descricao ?? this.descricao,
       raridade: raridade ?? this.raridade,

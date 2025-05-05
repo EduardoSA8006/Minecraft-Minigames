@@ -1,16 +1,68 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minigames_minecraft/app/providers/app_providers.dart';
-import 'package:minigames_minecraft/data/models/item_model.dart';
+import 'package:minigames_minecraft/app/providers/filtered_items_provider.dart';
+import 'package:minigames_minecraft/app/providers/search_filter_provider.dart';
+import 'package:minigames_minecraft/features/items/models/item_model.dart';
 import 'package:minigames_minecraft/features/items/presentation/widgets/itens_card.dart';
+import 'package:minigames_minecraft/features/items/presentation/widgets/show_filter_dialog.dart';
 
-class ItemListScreen extends ConsumerWidget {
+// Alterado para ConsumerStatefulWidget
+class ItemListScreen extends ConsumerStatefulWidget {
   const ItemListScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ItemListScreen> createState() => _ItemListScreenState();
+}
+
+class _ItemListScreenState extends ConsumerState<ItemListScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _searchBarController;
+  late Animation<double> _searchBarAnimation;
+  final TextEditingController _searchController = TextEditingController();
+  bool _showSearchBar = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchBarController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _searchBarAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(
+        parent: _searchBarController,
+        curve: Curves.easeInOut,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _searchBarController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _toggleSearchBar() {
+    setState(() {
+      _showSearchBar = !_showSearchBar;
+      if (_showSearchBar) {
+        _searchBarController.forward();
+      } else {
+        _searchBarController.reverse();
+        _searchController.clear();
+        ref.read(searchFilterProvider.notifier).setSearchQuery('');
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final itemsAsync = ref.watch(itemsProvider);
+    final filteredItems = ref.watch(filteredItemsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -19,112 +71,87 @@ class ItemListScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_alt),
-            onPressed: () => _showFilterDialog(context, ref),
+            onPressed: () => showFilterDialog(context, ref),
           ),
           IconButton(
             icon: const Icon(Icons.search),
-            onPressed: () => showSearch(
-              context: context,
-              delegate: ItemSearchDelegate(ref: ref, items: []),
-            ),
+            onPressed: _toggleSearchBar,
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: itemsAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, _) => Center(child: Text('Erro: $err')),
-          data: (items) => GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-              childAspectRatio: 0.8,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        color: Colors.white,
+        child: Column(
+          children: [
+            SizeTransition(
+              sizeFactor: _searchBarAnimation,
+              axisAlignment: -1.0,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Pesquisar itens...',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _searchController.clear();
+                        ref
+                            .read(searchFilterProvider.notifier)
+                            .setSearchQuery('');
+                      },
+                    ),
+                  ),
+                  onChanged: (value) {
+                    ref
+                        .read(searchFilterProvider.notifier)
+                        .setSearchQuery(value);
+                  },
+                ),
+              ),
             ),
-            itemCount: items.length,
-            itemBuilder: (context, index) => ItemCard(item: items[index]),
-          ),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.only(
+                    left: 8, right: 8, bottom: 8, top: 12),
+                child: itemsAsync.when(
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (err, _) => Center(child: Text('Erro: $err')),
+                  data: (_) => GridView.builder(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 6,
+                      mainAxisSpacing: 6,
+                      childAspectRatio: 0.8,
+                    ),
+                    itemCount: filteredItems.length,
+                    itemBuilder: (context, index) =>
+                        ItemCard(item: filteredItems[index]),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/add-item'),
-        child: const Icon(Icons.add),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(Icons.add, size: 28),
       ),
     );
   }
-}
-
-class ItemSearchDelegate extends SearchDelegate {
-  final WidgetRef ref;
-  final List<String> items;
-
-  ItemSearchDelegate({required this.ref, required this.items});
-
-  @override
-  List<Widget>? buildActions(BuildContext context) {
-    return [
-      IconButton(
-        icon: const Icon(Icons.clear),
-        onPressed: () {
-          query = '';
-        },
-      ),
-    ];
-  }
-
-  @override
-  Widget? buildLeading(BuildContext context) {
-    return IconButton(
-      icon: const Icon(Icons.arrow_back),
-      onPressed: () {
-        close(context, null);
-      },
-    );
-  }
-
-  @override
-  Widget buildResults(BuildContext context) {
-    final results = items
-        .where((item) => item.toLowerCase().contains(query.toLowerCase()))
-        .toList();
-
-    return ListView(
-      children: results.map((item) => ListTile(title: Text(item))).toList(),
-    );
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    final suggestions = items
-        .where((item) => item.toLowerCase().startsWith(query.toLowerCase()))
-        .toList();
-
-    return ListView(
-      children: suggestions
-          .map((item) => ListTile(
-                title: Text(item),
-                onTap: () {
-                  query = item;
-                  showResults(context);
-                },
-              ))
-          .toList(),
-    );
-  }
-}
-
-void _showFilterDialog(BuildContext context, WidgetRef ref) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Filtrar itens'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Adicione seus filtros aqui
-        ],
-      ),
-    ),
-  );
 }
