@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:minigames_minecraft/data/models/item_model.dart';
+import 'package:minigames_minecraft/features/items/models/item_model.dart';
 
 class ItemCard extends StatelessWidget {
   final Item item;
@@ -11,36 +11,37 @@ class ItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 3,
+      elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () => context.go('/edit-item/${item.id}'),
+        onTap: () => context.push('/edit-item/${item.id}'),
         child: Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding:
+              const EdgeInsets.only(left: 12.0, right: 12, top: 9, bottom: 1),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Ícone com imagem de fundo estilo Minecraft
               Container(
-                height: 100,
-                decoration: BoxDecoration(
-                  color: _getItemColor(item.categoria),
-                  borderRadius: BorderRadius.circular(8),
-                  image: item.imagem.isNotEmpty
-                      ? DecorationImage(
-                          image: NetworkImage(item.imagem),
-                          fit: BoxFit.contain,
-                        )
-                      : null,
-                ),
-                alignment: Alignment.center,
-                child: item.imagem.isEmpty
-                    ? const Icon(Icons.casino, size: 40)
-                    : null,
-              ),
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: _getItemColor(item.categoria),
+                    borderRadius: BorderRadius.circular(8),
+                    image: item.imagem.isNotEmpty
+                        ? DecorationImage(
+                            image: NetworkImage(item.imagem),
+                            fit: BoxFit.contain,
+                          )
+                        : null,
+                  ),
+                  alignment: Alignment.center,
+                  child: item.imagem.isEmpty
+                      ? const Icon(Icons.casino, size: 40)
+                      : null),
               const SizedBox(height: 8),
               Text(
                 item.nome['pt'] ?? 'Sem nome',
@@ -51,10 +52,10 @@ class ItemCard extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 11),
               Row(
                 children: [
-                  const Icon(Icons.layers, size: 16, color: Colors.grey),
+                  const Icon(Icons.layers, size: 20, color: Colors.grey),
                   const SizedBox(width: 4),
                   Text(
                     '${item.stackSize}',

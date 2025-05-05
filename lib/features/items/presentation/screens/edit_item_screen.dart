@@ -36,7 +36,7 @@ class _EditItemScreenState extends ConsumerState<EditItemScreen> {
   }
 
   Future<void> _loadItem() async {
-    await ref.read(itemCubitProvider).loadItemForEditing(widget.itemId);
+    //await ref.read(itemCubitProvider).updateItem(widget.itemId);
   }
 
   @override
@@ -54,12 +54,12 @@ class _EditItemScreenState extends ConsumerState<EditItemScreen> {
     final state = ref.read(itemCubitProvider).state;
 
     if (state is ItemSuccess && state.item != null) {
-      final updatedItem = state.item!.copyWith(
-        nome: {'pt': _nomeController.text, 'en': _nomeController.text},
-        categoria: "ferramentas",
-      );
+      // final updatedItem = state.item!.copyWith(
+      // nome: {'pt': _nomeController.text, 'en': _nomeController.text},
+      //ategoria: "ferramentas",
+      //);
 
-      await ref.read(itemCubitProvider).saveItem(updatedItem, isEditing: true);
+      //await ref.read(itemCubitProvider).saveItem(updatedItem, isEditing: true);
 
       if (mounted && ref.read(itemCubitProvider).state is ItemSuccess) {
         Navigator.pop(context);
@@ -96,7 +96,6 @@ class _EditItemScreenState extends ConsumerState<EditItemScreen> {
                     enabled: false,
                   ),
                   TextFormField(
-                    
                     decoration: const InputDecoration(labelText: 'Categoria'),
                   ),
                   const SizedBox(height: 20),
